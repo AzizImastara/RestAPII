@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="en" x-data="statusApp()">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Status Website Perguruan Tinggi</title>
+    <link
+      href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css"
+      rel="stylesheet"
+    />
+    <style>
+      body {
+        padding: 20px;
+      }
+      table {
+        width: 100%;
+        margin-top: 20px;
+      }
+      th,
+      td {
+        text-align: center;
+        padding: 10px;
+      }
+      th {
+        background-color: #f8f9fa;
+      }
+      .countdown {
+        font-weight: bold;
+      }
+      .status-up {
+        color: green;
+        font-weight: bold;
+      }
+      .status-down {
+        color: red;
+        font-weight: bold;
+      }
+    </style>
+    <script
+      src="https://cdn.jsdelivr.net/npm/alpinejs@3.10.3/dist/cdn.min.js"
+      defer
+    ></script>
+  </head>
+  <body>
+    <div class="container">
+      <h1 class="text-center">Status Website Perguruan Tinggi</h1>
+      <table id="status-table" class="table table-bordered">
+        <thead class="thead-light">
+          <tr>
+            <th>Nama</th>
+            <th>Status</th>
+            <th>Countdown</th>
+            <th>Last Check Up</th>
+          </tr>
+        </thead>
+        <tbody>
+          <template x-for="url in sortedUrls" :key="url.url">
+            <tr>
+              <td>
+                <a
+                  :href="url.url"
+                  x-text="url.name"
+                  target="_blank"
+                  :title="url.url"
+                ></a>
+              </td>
+              <td
+                :class="{'status-up': url.status === 'Up', 'status-down': url.status === 'Down'}"
+                x-text="url.status"
+              ></td>
+              <td x-text="url.countdown + ' seconds'"></td>
+              <td x-text="url.last_check_up"></td>
+            </tr>
+          </template>
+        </tbody>
+      </table>
+    </div>
+    <script>
+      function statusApp() {
+        return {
+          urls: [],
+          async fetchStatus() {
+            try {
+              const response = await fetch("/status");
+              const data = await response.json();
+              this.urls = data.urls.map((url) => ({
+                ...url,
+                countdown: url.status === "Up" ? 60 : 30,
+              }));
+            } catch (error) {
+              console.error("Error fetching status:", error);
+            }
+          },
+          get sortedUrls() {
+            return this.urls.sort((a, b) =>
+              a.status === "Down" && b.status === "Up" ? -1 : 1
+            );
+          },
+          startCountdown() {
+            setInterval(() => {
+              this.urls.forEach((url) => {
+                if (url.countdown > 0) {
+                  url.countdown--;
+                } else {
+                  this.updateSingleStatus(url.url);
+                }
+              });
+            }, 1000);
+          },
+          async updateSingleStatus(url) {
+            try {
+              const response = await fetch("/status");
+              const data = await response.json();
+              const updatedUrl = data.urls.find((u) => u.url === url);
+              const urlIndex = this.urls.findIndex((u) => u.url === url);
+              if (urlIndex !== -1) {
+                this.urls[urlIndex] = {
+                  ...updatedUrl,
+                  countdown: updatedUrl.status === "Up" ? 60 : 30,
+                };
+              }
+            } catch (error) {
+              console.error("Error fetching single status:", error);
+            }
+          },
+          init() {
+            this.fetchStatus();
+            this.startCountdown();
+          },
+        };
+      }
+    </script>
+  </body>
+</html>
