@@ -23,7 +23,7 @@ def load_urls_from_file(file_path):
         print(f"Error reading file: {e}")
     return urls
 
-urls = load_urls_from_file('urls.json')
+urls = load_urls_from_file('templates/urls.json')
 
 def check_status_independently(url_obj):
     while True:
