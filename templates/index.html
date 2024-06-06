@@ -35,6 +35,10 @@
         color: red;
         font-weight: bold;
       }
+      .status-redirect {
+        color: orange;
+        font-weight: bold;
+      }
     </style>
     <script
       src="https://cdn.jsdelivr.net/npm/alpinejs@3.10.3/dist/cdn.min.js"
@@ -65,7 +69,11 @@
                 ></a>
               </td>
               <td
-                :class="{'status-up': url.status === 'Up', 'status-down': url.status === 'Down'}"
+                :class="{
+                  'status-up': url.status === 'Up',
+                  'status-down': url.status === 'Down',
+                  'status-redirect': url.status === 'Redirect'
+                }"
                 x-text="url.status"
               ></td>
               <td x-text="url.countdown + ' seconds'"></td>
@@ -85,15 +93,21 @@
               const data = await response.json();
               this.urls = data.urls.map((url) => ({
                 ...url,
-                countdown: url.status === "Up" ? 60 : 30,
+                countdown:
+                  url.status === "Up"
+                    ? 60
+                    : url.status === "Redirect"
+                    ? 45
+                    : 30,
               }));
             } catch (error) {
               console.error("Error fetching status:", error);
             }
           },
           get sortedUrls() {
-            return this.urls.sort((a, b) =>
-              a.status === "Down" && b.status === "Up" ? -1 : 1
+            const statusOrder = { Down: 0, Redirect: 1, Up: 2 };
+            return this.urls.sort(
+              (a, b) => statusOrder[a.status] - statusOrder[b.status]
             );
           },
           startCountdown() {
@@ -116,7 +130,12 @@
               if (urlIndex !== -1) {
                 this.urls[urlIndex] = {
                   ...updatedUrl,
-                  countdown: updatedUrl.status === "Up" ? 60 : 30,
+                  countdown:
+                    updatedUrl.status === "Up"
+                      ? 60
+                      : updatedUrl.status === "Redirect"
+                      ? 45
+                      : 30,
                 };
               }
             } catch (error) {
