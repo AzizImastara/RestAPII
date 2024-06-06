@@ -1,6 +1,7 @@
 import threading
 import time
 import json
+import pytz
 from datetime import datetime
 from flask import Flask, jsonify, render_template
 import requests
@@ -23,16 +24,18 @@ def load_urls_from_file(file_path):
         print(f"Error reading file: {e}")
     return urls
 
-urls = load_urls_from_file('templates/urls.json')
+urls = load_urls_from_file('./templates/urls.json')
 
 def check_status_independently(url_obj):
     while True:
         url = url_obj['url']
+        local_tz = pytz.timezone('Asia/Jakarta')
         try:
             response = requests.get(url, timeout=5)
             if response.status_code == 200:
                 url_obj['status'] = 'Up'
-                url_obj['last_check_up'] = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+                now_local = datetime.now(local_tz)
+                url_obj['last_check_up'] = now_local.strftime('%Y-%m-%d %H:%M:%S')
             else:
                 url_obj['status'] = 'Down'
         except requests.RequestException:

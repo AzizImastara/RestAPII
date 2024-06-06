@@ -81,7 +81,7 @@
           urls: [],
           async fetchStatus() {
             try {
-              const response = await fetch("/status");
+              const response = await fetch("./status");
               const data = await response.json();
               this.urls = data.urls.map((url) => ({
                 ...url,
@@ -109,7 +109,7 @@
           },
           async updateSingleStatus(url) {
             try {
-              const response = await fetch("/status");
+              const response = await fetch("./status");
               const data = await response.json();
               const updatedUrl = data.urls.find((u) => u.url === url);
               const urlIndex = this.urls.findIndex((u) => u.url === url);
